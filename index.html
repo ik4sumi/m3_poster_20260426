@@ -394,5 +394,69 @@
 <span>// 0x0A</span>
 </div>
 </main>
+            <script>
+        (function () {
+            var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<>/\\[]{}#%&-_";
+            var textNodes = [];
+            function collectTextNodes(root) {
+                if (!root) { return; }
+                root.childNodes.forEach(function (node) {
+                    if (node.nodeType === Node.TEXT_NODE) {
+                        if (node.nodeValue && node.nodeValue.trim().length > 0) {
+                            textNodes.push({ node: node, original: node.nodeValue });
+                        }
+                    } else if (node.nodeType === Node.ELEMENT_NODE) {
+                        var tag = node.tagName;
+                        if (["SCRIPT", "STYLE", "NOSCRIPT"].indexOf(tag) === -1) {
+                            collectTextNodes(node);
+                        }
+                    }
+                });
+            }
+            function scrambleEntry(entry, delay) {
+                var original = entry.original;
+                var node = entry.node;
+                var length = original.length;
+                if (!length) { return; }
+                function randomChar(index) {
+                    var char = original[index];
+                    return /\s/.test(char) ? char : characters[Math.floor(Math.random() * characters.length)];
+                }
+                var initial = "";
+                for (var i = 0; i < length; i++) {
+                    initial += randomChar(i);
+                }
+                node.nodeValue = initial;
+                var revealStep = Math.max(1, Math.floor(length / 14));
+                setTimeout(function () {
+                    var iteration = 0;
+                    var timer = setInterval(function () {
+                        var output = "";
+                        for (var j = 0; j < length; j++) {
+                            var char = original[j];
+                            if (/\s/.test(char) || j < iteration) {
+                                output += char;
+                            } else {
+                                output += randomChar(j);
+                            }
+                        }
+                        node.nodeValue = output;
+                        iteration += revealStep;
+                        if (iteration >= length) {
+                            node.nodeValue = original;
+                            clearInterval(timer);
+                        }
+                    }, 45);
+                }, delay);
+            }
+            window.addEventListener('load', function () {
+                textNodes = [];
+                collectTextNodes(document.body);
+                textNodes.forEach(function (entry, index) {
+                    scrambleEntry(entry, index * 30);
+                });
+            });
+        })();
+        </script>
 <!-- END: Main Poster Container -->
 </body></html>
